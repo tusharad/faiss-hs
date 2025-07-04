@@ -10,23 +10,18 @@ permissions:
   contents: read
 
 jobs:
-  generate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - id: generate
-        uses: freckle/stack-action/generate-matrix@v5
-    outputs:
-      stack-yamls: ${{ steps.generate.outputs.stack-yamls }}
-
   build:
-    needs: generate
-    strategy:
-      matrix:
-        stack-yaml: ${{ fromJSON(needs.generate.outputs.stack-yamls) }}
-      fail-fast: false
 
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        stack_yaml:
+          - stack.yaml
+          - stack-lts-19.33.yaml
+          - stack-lts-20.26.yaml
+          - stack-lts-21.25.yaml
+          - stack-lts-22.43.yaml
+          - stack-lts-23.19.yaml
     defaults:
       run:
         shell: bash

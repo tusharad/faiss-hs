@@ -8,7 +8,7 @@ name:           faiss-hs
 version:        0.0.1.0
 synopsis:       Haskell bindings for faiss
 description:    Please see the README on GitHub at <https://github.com/tusharad/faiss-hs#readme>
-category:       Similarity, clustering, bindings
+category:       similarity, clustering, bindings
 homepage:       https://github.com/tusharad/faiss-hs#readme
 bug-reports:    https://github.com/tusharad/faiss-hs/issues
 author:         tushar
