@@ -33,7 +33,11 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      - run: nix-shell --run "stack build --stack-yaml ${{ matrix.stack_yaml }}"
+      - name: Build inside Nix shell
+        run: |
+          nix-shell <<EOF
+          stack build --stack-yaml ${{ matrix.stack_yaml }}
+          EOF
       
   tests:
     needs: build
