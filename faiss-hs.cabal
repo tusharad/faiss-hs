@@ -30,8 +30,11 @@ library
       FAISS
       FAISS.Index
       FAISS.IndexFactory
+      FAISS.IndexFlat
       FAISS.Internal.Index
       FAISS.Internal.IndexFactory
+      FAISS.Internal.IndexFlat
+      FAISS.Internal.Utils
   other-modules:
       Paths_faiss_hs
   hs-source-dirs:

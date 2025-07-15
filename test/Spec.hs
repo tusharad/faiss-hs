@@ -2,6 +2,8 @@ import Control.Monad
 import Data.Either
 import Data.Maybe (fromMaybe, listToMaybe)
 import FAISS
+import qualified FAISS.Index as I
+import qualified FAISS.IndexFlat as IF
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -106,6 +108,7 @@ faissTests =
     , searchTests
     , advancedOperationsTests
     , errorHandlingTests
+    , testIndexFlat
     ]
 
 -- Index Factory Tests
@@ -354,44 +357,125 @@ advancedOperationsTests =
 
 -- Error Handling Tests
 errorHandlingTests :: TestTree
-errorHandlingTests = testGroup "Error Handling Tests"
-  [ 
-    {- TODO:
-    testCase "Add vectors with wrong dimension" $ testWithIndex config2D $ \idx -> do
-      let wrongDimVectors = [[1.0, 2.0, 3.0]] -- 3D vector to 2D index
-      result <- indexAdd idx wrongDimVectors
-      result `shouldSatisfy` isLeft
-      -}
+errorHandlingTests =
+  testGroup
+    "Error Handling Tests"
+    [ {- TODO:
+      testCase "Add vectors with wrong dimension" $ testWithIndex config2D $ \idx -> do
+        let wrongDimVectors = [[1.0, 2.0, 3.0]] -- 3D vector to 2D index
+        result <- indexAdd idx wrongDimVectors
+        result `shouldSatisfy` isLeft
+        -}
       {-
-  , testCase "Search with wrong query dimension" $ testWithIndex config2D $ \idx -> do
-      -- Add vectors first
-      addResult <- indexAdd idx (tcVectors config2D)
-      addResult `shouldSatisfy` isRight
-      
-      -- Search with wrong dimension
-      let wrongQueryVectors = [[1.0, 2.0, 3.0]]
-      searchResult <- indexSearch idx wrongQueryVectors 1
-      searchResult `shouldSatisfy` isLeft
-      -}
-  testCase "Search with k=0" $ testWithIndex config2D $ \idx -> do
-      -- Add vectors first
-      addResult <- indexAdd idx (tcVectors config2D)
-      addResult `shouldSatisfy` isRight
-      
-      -- Search with k=0
-      searchResult <- indexSearch idx (tcQueryVectors config2D) 0
-      searchResult `shouldSatisfy` isLeft
-   {-   
-  , testCase "Reconstruct invalid index" $ testWithIndex config2D $ \idx -> do
-      -- Add vectors first
-      addResult <- indexAdd idx (tcVectors config2D)
-      addResult `shouldSatisfy` isRight
-      
-      -- Try to reconstruct invalid index
-      reconstructResult <- indexReconstruct idx 999 (tcDimension config2D)
-      reconstructResult `shouldSatisfy` isLeft
-      -}
-  ]
+      , testCase "Search with wrong query dimension" $ testWithIndex config2D $ \idx -> do
+          -- Add vectors first
+          addResult <- indexAdd idx (tcVectors config2D)
+          addResult `shouldSatisfy` isRight
+
+          -- Search with wrong dimension
+          let wrongQueryVectors = [[1.0, 2.0, 3.0]]
+          searchResult <- indexSearch idx wrongQueryVectors 1
+          searchResult `shouldSatisfy` isLeft
+          -}
+      testCase "Search with k=0" $ testWithIndex config2D $ \idx -> do
+        -- Add vectors first
+        addResult <- indexAdd idx (tcVectors config2D)
+        addResult `shouldSatisfy` isRight
+
+        -- Search with k=0
+        searchResult <- indexSearch idx (tcQueryVectors config2D) 0
+        searchResult `shouldSatisfy` isLeft
+        {-
+        , testCase "Reconstruct invalid index" $ testWithIndex config2D $ \idx -> do
+            -- Add vectors first
+            addResult <- indexAdd idx (tcVectors config2D)
+            addResult `shouldSatisfy` isRight
+
+            -- Try to reconstruct invalid index
+            reconstructResult <- indexReconstruct idx 999 (tcDimension config2D)
+            reconstructResult `shouldSatisfy` isLeft
+            -}
+    ]
+
+assertRight :: Either String a -> IO a
+assertRight = either (const $ assertFailure "Expected Right but got Left") pure
+
+-- | Test suite for IndexFlat module
+testIndexFlat :: TestTree
+testIndexFlat =
+  testGroup
+    "IndexFlat"
+    [ testCase "indexFlatNew creates L2 index" $ do
+        result <- IF.indexFlatNew 16 I.MetricL2
+        idx <- assertRight result
+        d <- I.indexGetD idx
+        d @?= 16
+        metric <- I.indexGetMetricType idx
+        metric @?= I.MetricL2
+    , testCase "indexFlatIPNew creates IP index" $ do
+        result <- IF.indexFlatIPNew 32
+        idx <- assertRight result
+        d <- I.indexGetD idx
+        d @?= 32
+        metric <- I.indexGetMetricType idx
+        metric @?= I.MetricInnerProduct
+    , testCase "indexFlatL2New creates L2 index" $ do
+        result <- IF.indexFlatL2New 8
+        idx <- assertRight result
+        d <- I.indexGetD idx
+        d @?= 8
+        metric <- I.indexGetMetricType idx
+        metric @?= I.MetricL2
+    , testCase "indexRefineFlatNew wraps base index" $ do
+        baseResult <- IF.indexFlatL2New 4
+        baseIdx <- assertRight baseResult
+        refineResult <- IF.indexRefineFlatNew baseIdx
+        refineIdx <- assertRight refineResult
+        d <- I.indexGetD refineIdx
+        d @?= 4
+        metric <- I.indexGetMetricType refineIdx
+        metric @?= I.MetricL2
+    , testCase "indexFlat1DNew creates 1D index" $ do
+        result <- IF.indexFlat1DNew
+        idx <- assertRight result
+        d <- I.indexGetD idx
+        d @?= 1
+        metric <- I.indexGetMetricType idx
+        metric @?= I.MetricL2 -- Metric is hardcoded for IndexFlat1D?
+    , testCase "indexFlat1DUpdatePermutation works" $ do
+        result <- IF.indexFlat1DNew
+        idx <- assertRight result
+        ret <- IF.indexFlat1DUpdatePermutation idx
+        case ret of
+          Left err -> assertFailure $ "Failed to update permutation: " ++ err
+          Right () -> pure ()
+    , testCase "indexFlatComputeDistanceSubset computes distances" $ do
+        -- Create flat index
+        Right idx <- IF.indexFlatL2New 2
+        -- Add some vectors
+        let addVectors = [[1.0, 2.0], [3.0, 4.0]]
+        addRet <- I.indexAdd idx addVectors
+        addRet @?= Right ()
+
+        -- Query vector
+        let queries = [[0.0, 0.0]]
+
+        -- Labels to compare against
+        let labels = [[0, 1]] -- subset labels
+
+        -- Compute distance subset
+        distsOrErr <- IF.indexFlatComputeDistanceSubset idx queries labels
+        case distsOrErr of
+          Left err -> assertFailure $ "Failed to compute distance subset: " ++ err
+          Right dists -> do
+            let two = 2 :: Int -- Had to annotate due to warnings
+            let expectedDists = [[(1 ^ two + 2 ^ two), (3 ^ two + 4 ^ two)]] -- L2 squared
+            (map (\x -> roundTo4 x)) (fromMaybe [] $ listToMaybe dists)
+              @?= map (roundTo4) (fromMaybe [] $ listToMaybe expectedDists)
+    ]
+
+roundTo4 :: Float -> Float
+roundTo4 x = fromIntegral (round (x * 10000) :: Int) / 10000
 
 -- Helper Functions
 testWithIndex :: TestConfig -> (FaissIndex -> IO ()) -> IO ()

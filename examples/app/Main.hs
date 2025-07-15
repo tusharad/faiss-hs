@@ -3,9 +3,12 @@ module Main (main) where
 import FAISS.Index
 import FAISS.Internal.Index
 import FAISS.Internal.IndexFactory
+import Flat
 
 main :: IO ()
 main = do
+  runApp
+  {-
   let d = 32
   eRes <- indexFactory d "Flat" MetricL2
   case eRes of
@@ -24,3 +27,4 @@ main = do
       indexGetNTotal faissIndex >>= print
       indexSearch faissIndex queryMatrix 3 >>= (\x -> print $ fst <$> x)
       putStrLn "all good"
+      -}

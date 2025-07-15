@@ -24,7 +24,12 @@ indexFactory d description metric
   | otherwise =
       withCString description $ \descCStr ->
         alloca $ \ptrPtr -> do
-          ret <- c_faiss_index_factory ptrPtr (fromIntegral d) descCStr (fromIntegral $ fromEnum metric)
+          ret <-
+            c_faiss_index_factory
+              ptrPtr
+              (fromIntegral d)
+              descCStr
+              (fromIntegral $ fromEnum metric)
           if ret == 0
             then do
               idxPtr <- peek ptrPtr
