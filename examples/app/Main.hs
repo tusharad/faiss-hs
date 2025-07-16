@@ -3,7 +3,8 @@ module Main (main) where
 import FAISS.Index
 import FAISS.Internal.Index
 import FAISS.Internal.IndexFactory
-import Flat
+-- import Flat
+import IVFFlat
 
 main :: IO ()
 main = do

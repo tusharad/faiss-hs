@@ -19,7 +19,9 @@ module FAISS.Internal.Index
   , FaissRangeSearchResult
   , IdxT
   , c_faiss_SearchParameters_new
-  -- , c_faiss_SearchParameters_free
+  , c_faiss_IDSelectorRange_free
+  , c_faiss_SearchParameters_free 
+  , c_faiss_Index_free 
   , c_faiss_Index_d
   , c_faiss_Index_is_trained
   , c_faiss_Index_ntotal
@@ -65,10 +67,11 @@ data FaissIDSelector_
 
 -- | Type aliases for the opaque pointers
 type FaissIndex = Ptr FaissIndex_
-
 type FaissSearchParameters = Ptr FaissSearchParameters_
-type FaissRangeSearchResult = Ptr FaissRangeSearchResult_
 type FaissIDSelector = Ptr FaissIDSelector_
+
+
+type FaissRangeSearchResult = Ptr FaissRangeSearchResult_
 
 -- | Metric types supported by FAISS
 data FaissMetricType
@@ -114,10 +117,14 @@ instance Enum FaissMetricType where
 foreign import ccall unsafe "faiss_SearchParameters_new"
   c_faiss_SearchParameters_new :: Ptr FaissSearchParameters -> FaissIDSelector -> IO CInt
 
-{- TODO
 foreign import ccall unsafe "&faiss_SearchParameters_free"
   c_faiss_SearchParameters_free :: FunPtr (FaissSearchParameters -> IO ())
-  -}
+
+foreign import ccall unsafe "&faiss_IDSelectorRange_free"
+  c_faiss_IDSelectorRange_free :: FunPtr (FaissIDSelector -> IO ())
+
+foreign import ccall unsafe "&faiss_Index_free"
+  c_faiss_Index_free :: FunPtr (FaissIndex -> IO ())
 
 -- Index getters
 foreign import ccall unsafe "faiss_Index_d"

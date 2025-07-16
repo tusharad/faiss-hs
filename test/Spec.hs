@@ -4,6 +4,7 @@ import Data.Maybe (fromMaybe, listToMaybe)
 import FAISS
 import qualified FAISS.Index as I
 import qualified FAISS.IndexFlat as IF
+import qualified FAISS.IndexIVFFlat as IVFF
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -109,6 +110,7 @@ faissTests =
     , advancedOperationsTests
     , errorHandlingTests
     , testIndexFlat
+    , testIndexIVFFlat
     ]
 
 -- Index Factory Tests
@@ -202,6 +204,87 @@ indexOperationsTests =
         -- Check vectors were removed
         ntotalAfter <- indexGetNTotal idx
         ntotalAfter @?= 0
+    ]
+
+testIndexIVFFlat :: TestTree
+testIndexIVFFlat =
+  testGroup
+    "IndexIVFFlat"
+    [ testCase "indexIVFFlatNewWithMetric creates IVF index" $ do
+        quantizerResult <- IF.indexFlatL2NewWith 16
+        quantizer <- assertRight quantizerResult
+        result <- IVFF.indexIVFFlatNewWithMetric quantizer 16 50 I.MetricL2
+        idx <- assertRight result
+        d <- I.indexGetD idx
+        d @?= 16
+        metric <- I.indexGetMetricType idx
+        metric @?= I.MetricL2
+    , testCase "indexIVFFlat is not trained before training" $ do
+        quantizerResult <- IF.indexFlatL2NewWith 8
+        quantizer <- assertRight quantizerResult
+        result <- IVFF.indexIVFFlatNewWithMetric quantizer 8 10 I.MetricL2
+        idx <- assertRight result
+        trained <- I.indexGetIsTrained idx
+        trained @?= False
+    , testCase "indexIVFFlat can be trained" $ do
+        quantizerResult <- IF.indexFlatL2NewWith 8
+        quantizer <- assertRight quantizerResult
+        result <- IVFF.indexIVFFlatNewWithMetric quantizer 8 10 I.MetricL2
+        idx <- assertRight result
+        let trainingVecs = replicate 100 (replicate 8 0.5)
+        trainResult <- I.indexTrain idx trainingVecs
+        trainResult @?= Right ()
+        trained <- I.indexGetIsTrained idx
+        trained @?= True
+    , testCase "indexIVFFlat can add and search vectors" $ do
+        let d = 4
+        quantizerResult <- IF.indexFlatL2NewWith d
+        quantizer <- assertRight quantizerResult
+        result <- IVFF.indexIVFFlatNewWithMetric quantizer d 5 I.MetricL2
+        idx <- assertRight result
+
+        -- Train
+        let trainingVecs = replicate 100 (replicate d 1.0)
+        _ <- I.indexTrain idx trainingVecs
+
+        -- Add
+        let dbVecs = [[1.0, 2.0, 3.0, 4.0], [2.0, 2.0, 2.0, 2.0]]
+        addResult <- I.indexAdd idx dbVecs
+        addResult @?= Right ()
+
+        -- Set nprobe > 1 for recall
+        _ <- IVFF.indexIVFFlatSetNProbe idx 5
+
+        -- Search
+        let queries = [[1.0, 2.0, 3.0, 4.0]]
+        searchResult <- I.indexSearch idx queries 2
+        case searchResult of
+          Left err -> assertFailure err
+          Right (_, labels) -> do
+            length labels @?= 2
+            all (>= 0) labels @?= True
+    {- direct map not available
+    , testCase "indexIVFFlatUpdateVectors updates entries" $ do
+        let d = 3
+        quantizerResult <- IF.indexFlatL2NewWith d
+        quantizer <- assertRight quantizerResult
+        result <- IVFF.indexIVFFlatNewWithMetric quantizer d 5 I.MetricL2
+        idx <- assertRight result
+
+        -- Train
+        let trainingVecs = replicate 50 (replicate d 0.0)
+        _ <- I.indexTrain idx trainingVecs
+
+        -- Add vectors with IDs
+        let addVecs = [[1.0, 0.0, 0.0], [2.0, 0.0, 0.0]]
+        let ids = [123, 456]
+        _ <- I.indexAddWithIds idx addVecs ids
+
+        -- Update vector at ID 123
+        let updated = [[10.0, 0.0, 0.0]]
+        updateResult <- IVFF.indexIVFFlatUpdateVectors idx [123] updated
+        updateResult @?= Right ()
+        -}
     ]
 
 -- Search Tests
@@ -311,7 +394,8 @@ advancedOperationsTests =
           Left err -> assertFailure err
           Right residual -> do
             length residual @?= length firstVector
-    , testCase "Compute residual for multiple vectors" $ testWithIndex config2D $ \idx -> do
+    , testCase "Compute residual for multiple vectors" $ 
+        testWithIndex config2D $ \idx -> do
         -- Add vectors
         addResult <- indexAdd idx (tcVectors config2D)
         addResult `shouldSatisfy` isRight
@@ -406,28 +490,28 @@ testIndexFlat =
   testGroup
     "IndexFlat"
     [ testCase "indexFlatNew creates L2 index" $ do
-        result <- IF.indexFlatNew 16 I.MetricL2
+        result <- IF.indexFlatNewWith 16 I.MetricL2
         idx <- assertRight result
         d <- I.indexGetD idx
         d @?= 16
         metric <- I.indexGetMetricType idx
         metric @?= I.MetricL2
     , testCase "indexFlatIPNew creates IP index" $ do
-        result <- IF.indexFlatIPNew 32
+        result <- IF.indexFlatIPNewWith 32
         idx <- assertRight result
         d <- I.indexGetD idx
         d @?= 32
         metric <- I.indexGetMetricType idx
         metric @?= I.MetricInnerProduct
     , testCase "indexFlatL2New creates L2 index" $ do
-        result <- IF.indexFlatL2New 8
+        result <- IF.indexFlatL2NewWith 8
         idx <- assertRight result
         d <- I.indexGetD idx
         d @?= 8
         metric <- I.indexGetMetricType idx
         metric @?= I.MetricL2
     , testCase "indexRefineFlatNew wraps base index" $ do
-        baseResult <- IF.indexFlatL2New 4
+        baseResult <- IF.indexFlatL2NewWith 4
         baseIdx <- assertRight baseResult
         refineResult <- IF.indexRefineFlatNew baseIdx
         refineIdx <- assertRight refineResult
@@ -451,7 +535,7 @@ testIndexFlat =
           Right () -> pure ()
     , testCase "indexFlatComputeDistanceSubset computes distances" $ do
         -- Create flat index
-        Right idx <- IF.indexFlatL2New 2
+        Right idx <- IF.indexFlatL2NewWith 2
         -- Add some vectors
         let addVectors = [[1.0, 2.0], [3.0, 4.0]]
         addRet <- I.indexAdd idx addVectors

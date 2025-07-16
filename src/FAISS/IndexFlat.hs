@@ -2,7 +2,10 @@
 
 module FAISS.IndexFlat
   ( indexFlatNew
+  , indexFlatNewWith
   , indexFlatL2New
+  , indexFlatL2NewWith
+  , indexFlatIPNewWith
   , indexFlatIPNew
   , indexRefineFlatNew
   , indexFlat1DNew
@@ -11,15 +14,25 @@ module FAISS.IndexFlat
   , indexFlatComputeDistanceSubset
   ) where
 
+import Data.Maybe (fromMaybe, listToMaybe)
 import FAISS.Internal.Index
 import FAISS.Internal.IndexFlat
-import Foreign
 import FAISS.Internal.Utils
-import Data.Maybe (listToMaybe, fromMaybe)
+import Foreign
+
+indexFlatNew :: IO (Either String FaissIndex)
+indexFlatNew =
+  alloca $ \ptr -> do
+    ret <-
+      c_faiss_IndexFlat_new
+        ptr
+    if ret == 0
+      then Right . castPtr <$> peek ptr
+      else return $ Left "Failed to create IndexFlat"
 
 -- | Create a new IndexFlat with given dimension and metric.
-indexFlatNew :: Int -> FaissMetricType -> IO (Either String FaissIndex)
-indexFlatNew d metric
+indexFlatNewWith :: Int -> FaissMetricType -> IO (Either String FaissIndex)
+indexFlatNewWith d metric
   | d < 1 = pure $ Left "Dimension must be positive"
   | otherwise =
       alloca $ \ptr -> do
@@ -32,9 +45,17 @@ indexFlatNew d metric
           then Right . castPtr <$> peek ptr
           else return $ Left "Failed to create IndexFlat"
 
+indexFlatL2New :: IO (Either String FaissIndex)
+indexFlatL2New =
+  alloca $ \ptr -> do
+    ret <- c_faiss_IndexFlatL2_new ptr
+    if ret == 0
+      then Right . castPtr <$> peek ptr
+      else return $ Left "Failed to create IndexFlatL2"
+
 -- | Create a new IndexFlatL2 (L2 metric is implicit)
-indexFlatL2New :: Int -> IO (Either String FaissIndex)
-indexFlatL2New d
+indexFlatL2NewWith :: Int -> IO (Either String FaissIndex)
+indexFlatL2NewWith d
   | d < 1 = pure $ Left "Dimension must be positive"
   | otherwise =
       alloca $ \ptr -> do
@@ -43,9 +64,17 @@ indexFlatL2New d
           then Right . castPtr <$> peek ptr
           else return $ Left "Failed to create IndexFlatL2"
 
+indexFlatIPNew :: IO (Either String FaissIndex)
+indexFlatIPNew =
+  alloca $ \ptr -> do
+    ret <- c_faiss_IndexFlatIP_new ptr 
+    if ret == 0
+      then Right . castPtr <$> peek ptr
+      else return $ Left "Failed to create IndexFlatIP"
+
 -- | Create a new IndexFlatIP (inner product metric)
-indexFlatIPNew :: Int -> IO (Either String FaissIndex)
-indexFlatIPNew d
+indexFlatIPNewWith :: Int -> IO (Either String FaissIndex)
+indexFlatIPNewWith d
   | d < 1 = pure $ Left "Dimension must be positive"
   | otherwise =
       alloca $ \ptr -> do

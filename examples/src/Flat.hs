@@ -22,7 +22,7 @@ runApp = do
   xq <- genVectors nq d True
 
   -- Create IndexFlatL2
-  indexE <- indexFlatL2New d
+  indexE <- indexFlatL2NewWith d
   case indexE of
     Left err -> putStrLn $ "Failed to create index: " ++ err
     Right index -> do

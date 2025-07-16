@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.38.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -28,13 +28,25 @@ source-repository head
 library
   exposed-modules:
       FAISS
+      FAISS.DeviceUtils
+      FAISS.GpuAutoTune
+      FAISS.GpuClonerOptions
+      FAISS.GpuResources
       FAISS.Index
       FAISS.IndexFactory
       FAISS.IndexFlat
+      FAISS.IndexIVFFlat
+      FAISS.Internal.DeviceUtils
+      FAISS.Internal.GpuAutoTune
+      FAISS.Internal.GpuClonerOptions
+      FAISS.Internal.GpuResources
       FAISS.Internal.Index
       FAISS.Internal.IndexFactory
       FAISS.Internal.IndexFlat
+      FAISS.Internal.IndexIVFFlat
+      FAISS.Internal.StandardGpuResources
       FAISS.Internal.Utils
+      FAISS.StandardGpuResources
   other-modules:
       Paths_faiss_hs
   hs-source-dirs:

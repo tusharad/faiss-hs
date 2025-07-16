@@ -3,6 +3,7 @@ module FAISS.Internal.Utils
   , withIdxArray
   , peekFloatArray
   , peekIdxArray
+  , withOptionalArray
   ) where
 
 import FAISS.Internal.Index
@@ -24,3 +25,7 @@ peekFloatArray n ptr = map realToFrac <$> peekArray n ptr
 -- | Peek a C array of IdxT and convert to [Int]
 peekIdxArray :: Int -> Ptr IdxT -> IO [Int]
 peekIdxArray n ptr = map fromIntegral <$> peekArray n ptr
+
+withOptionalArray :: Storable a => Maybe [a] -> (Ptr a -> IO b) -> IO b
+withOptionalArray Nothing f = f nullPtr
+withOptionalArray (Just xs) f = withArray xs f
