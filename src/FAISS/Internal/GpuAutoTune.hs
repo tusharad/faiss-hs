@@ -1,6 +1,13 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module FAISS.Internal.GpuAutoTune where
+module FAISS.Internal.GpuAutoTune (
+    -- CPU <-> GPU conversion
+    c_faiss_index_gpu_to_cpu,
+    c_faiss_index_cpu_to_gpu,
+    c_faiss_index_cpu_to_gpu_with_options,
+    c_faiss_index_cpu_to_gpu_multiple,
+    c_faiss_index_cpu_to_gpu_multiple_with_options
+) where
 
 import Foreign
 import Foreign.C.Types

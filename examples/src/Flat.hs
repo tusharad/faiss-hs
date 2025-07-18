@@ -1,11 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flat where
+module Flat (runApp) where
 
 import System.Random (randomRIO)
 import Control.Monad (replicateM)
-import Data.List (transpose)
-import qualified Data.Vector as V
 
 import FAISS.Index
 import FAISS.IndexFlat

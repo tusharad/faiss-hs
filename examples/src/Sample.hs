@@ -1,14 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Sample where
+module Sample (runApp) where
 
 import Control.Monad (forM, forM_, replicateM)
-import Data.Either (fromRight)
-import qualified Data.Vector as V
-import Foreign
-import Foreign.Marshal.Alloc (alloca)
-import Foreign.Storable
-import System.Random (randomRIO)
 import qualified System.Random as R
 import Text.Printf (printf)
 

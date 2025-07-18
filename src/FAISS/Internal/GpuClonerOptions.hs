@@ -1,6 +1,39 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module FAISS.Internal.GpuClonerOptions where
+module FAISS.Internal.GpuClonerOptions (
+    -- Opaque Pointer Types
+    FaissGpuClonerOptions,
+    FaissGpuMultipleClonerOptions,
+    FaissGpuIndexConfig,
+    -- Enum
+    FaissIndicesOptions (..),
+    -- Constructor/Destructor
+    c_faiss_GpuClonerOptions_new,
+    c_faiss_GpuMultipleClonerOptions_new,
+    c_faiss_GpuClonerOptions_free,
+    -- GpuClonerOptions Getters/Setters
+    c_set_indicesOptions,
+    c_get_indicesOptions,
+    c_set_useFloat16CoarseQuantizer,
+    c_get_useFloat16CoarseQuantizer,
+    c_set_useFloat16,
+    c_get_useFloat16,
+    c_set_usePrecomputed,
+    c_get_usePrecomputed,
+    c_set_reserveVecs,
+    c_get_reserveVecs,
+    c_set_storeTransposed,
+    c_get_storeTransposed,
+    c_set_verbose,
+    c_get_verbose,
+    -- GpuMultipleClonerOptions Getters/Setters
+    c_set_shard,
+    c_get_shard,
+    c_set_shard_type,
+    c_get_shard_type,
+    -- GpuIndexConfig Getters
+    c_get_device
+) where
 
 import Foreign
 import Foreign.C.Types

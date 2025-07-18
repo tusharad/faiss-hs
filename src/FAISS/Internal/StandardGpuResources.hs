@@ -1,6 +1,19 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module FAISS.Internal.StandardGpuResources where
+module FAISS.Internal.StandardGpuResources (
+    -- Opaque Pointer Type
+    FaissStandardGpuResources,
+    -- Constructor & Destructor
+    c_faiss_StandardGpuResources_new,
+    c_faiss_StandardGpuResources_free,
+    -- Memory Management
+    c_faiss_StandardGpuResources_noTempMemory,
+    c_faiss_StandardGpuResources_setTempMemory,
+    c_faiss_StandardGpuResources_setPinnedMemory,
+    -- Stream Management
+    c_faiss_StandardGpuResources_setDefaultStream,
+    c_faiss_StandardGpuResources_setDefaultNullStreamAllDevices
+) where
 
 import Foreign
 import Foreign.C.Types

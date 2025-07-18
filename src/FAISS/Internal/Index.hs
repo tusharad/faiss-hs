@@ -20,8 +20,8 @@ module FAISS.Internal.Index
   , IdxT
   , c_faiss_SearchParameters_new
   , c_faiss_IDSelectorRange_free
-  , c_faiss_SearchParameters_free 
-  , c_faiss_Index_free 
+  , c_faiss_SearchParameters_free
+  , c_faiss_Index_free
   , c_faiss_Index_d
   , c_faiss_Index_is_trained
   , c_faiss_Index_ntotal
@@ -69,9 +69,9 @@ data FaissIDSelector_
 
 -- | Type aliases for the opaque pointers
 type FaissIndex = Ptr FaissIndex_
+
 type FaissSearchParameters = Ptr FaissSearchParameters_
 type FaissIDSelector = Ptr FaissIDSelector_
-
 
 type FaissRangeSearchResult = Ptr FaissRangeSearchResult_
 

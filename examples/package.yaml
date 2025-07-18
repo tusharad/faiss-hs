@@ -24,6 +24,9 @@ dependencies:
   - faiss-hs
   - random
   - vector
+  - langchain-hs >= 0.0.2.0
+  - containers
+  - text
 
 ghc-options:
   - -Wall

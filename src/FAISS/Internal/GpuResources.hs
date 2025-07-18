@@ -1,6 +1,29 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module FAISS.Internal.GpuResources where
+module FAISS.Internal.GpuResources (
+    -- Opaque Pointer Types
+    FaissGpuResources,
+    FaissGpuResourcesProvider,
+    -- CUDA Type Aliases
+    CublasHandle,
+    CudaStream,
+    -- Destructor
+    c_faiss_GpuResources_free,
+    -- Initialization
+    c_faiss_GpuResources_initializeForDevice,
+    -- Getters and Stream Management
+    c_faiss_GpuResources_getBlasHandle,
+    c_faiss_GpuResources_getDefaultStream,
+    c_faiss_GpuResources_getAsyncCopyStream,
+    c_faiss_GpuResources_getPinnedMemory,
+    c_faiss_GpuResources_getBlasHandleCurrentDevice,
+    c_faiss_GpuResources_getDefaultStreamCurrentDevice,
+    c_faiss_GpuResources_syncDefaultStream,
+    c_faiss_GpuResources_syncDefaultStreamCurrentDevice,
+    c_faiss_GpuResources_getAsyncCopyStreamCurrentDevice,
+    -- Provider API
+    c_faiss_GpuResourcesProvider_getResources
+) where
 
 import Foreign
 import Foreign.C.Types

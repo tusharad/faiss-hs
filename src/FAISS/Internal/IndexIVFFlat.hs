@@ -1,4 +1,16 @@
-module FAISS.Internal.IndexIVFFlat where
+module FAISS.Internal.IndexIVFFlat (
+    -- Opaque Pointer Type
+    FaissIndexIVFFlat,
+    -- Constructors
+    c_faiss_IndexIVFFlat_new,
+    c_faiss_IndexIVFFlat_new_with,
+    c_faiss_IndexIVFFlat_new_with_metric,
+    -- Core Add
+    c_faiss_IndexIVFFlat_add_core,
+    -- Update
+    c_faiss_IndexIVFFlat_update_vectors,
+    c_faiss_IndexIVFFlat_set_nprobe
+) where
 
 import FAISS.Internal.Index
 import Foreign

@@ -1,11 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 
-module IVFFlat where
+module IVFFlat (runApp) where
 
-import Control.Monad (forM_)
-import Data.Int (Int64)
-import qualified Data.Vector.Storable as VS
-import FAISS
 import qualified FAISS.Index as FI
 import qualified FAISS.IndexFlat as FI
 import qualified FAISS.IndexIVFFlat as IVFF
@@ -19,7 +15,7 @@ randomVectors n d = do
       vectors = chunksOf d floats
   return $
     zipWith
-      (\i v -> (v !! 0 + fromIntegral i / 1000) : tail v)
+      (\i v -> (head v + i / 1000) : drop 1 v)
       [0 ..]
       vectors
 

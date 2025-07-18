@@ -1,6 +1,11 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module FAISS.Internal.DeviceUtils where
+module FAISS.Internal.DeviceUtils
+  ( c_faiss_get_num_gpus
+  , c_faiss_gpu_profiler_start
+  , c_faiss_gpu_profiler_stop
+  , c_faiss_gpu_sync_all_devices
+  ) where
 
 import Foreign
 import Foreign.C.Types
