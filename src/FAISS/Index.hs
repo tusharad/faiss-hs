@@ -31,6 +31,11 @@ module FAISS.Index
   , indexSaCodeSize
   , indexSaEncode
   , indexSaDecode
+  , indexFree
+  , indexFileWrite
+  , idSelectorFree
+  , idSelectorRangeFree
+  , searchParametersFree
   , FaissIDSelector
   , FaissSearchParameters
   , FaissIndex
@@ -42,6 +47,7 @@ module FAISS.Index
 import FAISS.Internal.Index
 import FAISS.Internal.Utils
 import Foreign
+import Foreign.C (withCString)
 
 -- | Create new search parameters
 searchParametersNew :: FaissIDSelector -> IO (Either String FaissSearchParameters)
@@ -51,6 +57,15 @@ searchParametersNew sel = do
     if ret == 0
       then Right <$> peek ptr
       else return $ Left "Failed to create search parameters"
+
+idSelectorFree :: FaissIDSelector -> IO ()
+idSelectorFree = c_faiss_IDSelector_free
+
+idSelectorRangeFree :: FaissIDSelector -> IO ()
+idSelectorRangeFree = c_faiss_IDSelectorRange_free
+
+searchParametersFree :: FaissSearchParameters -> IO ()
+searchParametersFree = c_faiss_SearchParameters_free
 
 -- | Get the dimension of the index
 indexGetD :: FaissIndex -> IO Int
@@ -122,12 +137,13 @@ indexAddWithIds ::
 indexAddWithIds idx vectors ids = do
   let n = length vectors
   let normalized_vector = concat vectors
-  if length ids /= n then pure $ Left "Length of ids should be same as n (number of vectors)"
-  else do
-    withFloatArray normalized_vector $ \vptr ->
-      withIdxArray ids $ \iptr -> do
-        ret <- c_faiss_Index_add_with_ids idx (fromIntegral n) vptr iptr
-        return $ if ret == 0 then Right () else Left "Adding vectors with IDs failed"
+  if length ids /= n
+    then pure $ Left "Length of ids should be same as n (number of vectors)"
+    else do
+      withFloatArray normalized_vector $ \vptr ->
+        withIdxArray ids $ \iptr -> do
+          ret <- c_faiss_Index_add_with_ids idx (fromIntegral n) vptr iptr
+          return $ if ret == 0 then Right () else Left "Adding vectors with IDs failed"
 
 {- | query n vectors of dimension d to the index.
     Search for nearest neighbors return at most k vectors.
@@ -174,7 +190,15 @@ indexSearchWithParams idx queries k params = do
   withFloatArray normalized_vector $ \qptr ->
     allocaArray resultSize $ \dptr ->
       allocaArray resultSize $ \lptr -> do
-        ret <- c_faiss_Index_search_with_params idx n qptr (fromIntegral k) params dptr lptr
+        ret <-
+          c_faiss_Index_search_with_params
+            idx
+            n
+            qptr
+            (fromIntegral k)
+            params
+            dptr
+            lptr
         if ret == 0
           then do
             distances <- peekFloatArray resultSize dptr
@@ -363,4 +387,13 @@ indexSaDecode idx bytes n d = do
         then Right <$> peekFloatArray (n * d) vptr
         else return $ Left "Decoding failed"
 
--- | Utility functions
+indexFree :: FaissIndex -> IO ()
+indexFree idx = c_faiss_Index_free idx
+
+indexFileWrite :: FaissIndex -> FilePath -> IO (Either String ())
+indexFileWrite idx fPath = do
+  withCString fPath $ \fPtr -> do
+    ret <- c_faiss_write_index_fname idx fPtr
+    if ret == 0
+      then pure $ Right ()
+      else pure $ Left "Couldn't write into file"

@@ -44,6 +44,8 @@ module FAISS.Internal.Index
   , c_faiss_Index_sa_code_size
   , c_faiss_Index_sa_encode
   , c_faiss_Index_sa_decode
+  , c_faiss_write_index_fname
+  , c_faiss_IDSelector_free
   ) where
 
 import Foreign
@@ -117,14 +119,17 @@ instance Enum FaissMetricType where
 foreign import ccall unsafe "faiss_SearchParameters_new"
   c_faiss_SearchParameters_new :: Ptr FaissSearchParameters -> FaissIDSelector -> IO CInt
 
-foreign import ccall unsafe "&faiss_SearchParameters_free"
-  c_faiss_SearchParameters_free :: FunPtr (FaissSearchParameters -> IO ())
+foreign import ccall unsafe "faiss_SearchParameters_free"
+  c_faiss_SearchParameters_free :: FaissSearchParameters -> IO ()
 
-foreign import ccall unsafe "&faiss_IDSelectorRange_free"
-  c_faiss_IDSelectorRange_free :: FunPtr (FaissIDSelector -> IO ())
+foreign import ccall unsafe "faiss_IDSelectorRange_free"
+  c_faiss_IDSelectorRange_free :: FaissIDSelector -> IO ()
 
-foreign import ccall unsafe "&faiss_Index_free"
-  c_faiss_Index_free :: FunPtr (FaissIndex -> IO ())
+foreign import ccall unsafe "faiss_IDSelector_free"
+  c_faiss_IDSelector_free :: FaissIDSelector -> IO ()
+
+foreign import ccall unsafe "faiss_Index_free"
+  c_faiss_Index_free :: FaissIndex -> IO ()
 
 -- Index getters
 foreign import ccall unsafe "faiss_Index_d"
@@ -206,3 +211,6 @@ foreign import ccall unsafe "faiss_Index_sa_encode"
 
 foreign import ccall unsafe "faiss_Index_sa_decode"
   c_faiss_Index_sa_decode :: FaissIndex -> IdxT -> Ptr Word8 -> Ptr CFloat -> IO CInt
+
+foreign import ccall unsafe "faiss_write_index_fname"
+  c_faiss_write_index_fname :: FaissIndex -> Ptr CChar -> IO CInt

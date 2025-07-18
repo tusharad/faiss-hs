@@ -28,6 +28,7 @@ library
       Flat
       IVFFlat
       Lib
+      Sample
   other-modules:
       Paths_examples
   autogen-modules:

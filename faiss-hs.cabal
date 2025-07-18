@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       FAISS
+      FAISS.AuxIndexStructures
       FAISS.DeviceUtils
       FAISS.GpuAutoTune
       FAISS.GpuClonerOptions

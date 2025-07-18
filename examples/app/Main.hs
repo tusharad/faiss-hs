@@ -4,7 +4,8 @@ import FAISS.Index
 import FAISS.Internal.Index
 import FAISS.Internal.IndexFactory
 -- import Flat
-import IVFFlat
+-- import IVFFlat
+import Sample
 
 main :: IO ()
 main = do
